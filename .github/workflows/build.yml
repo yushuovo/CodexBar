@@ -1,0 +1,34 @@
+name: Windows build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build native Windows executables
+        shell: powershell
+        run: .\build.ps1
+      - name: Run offline core and UI checks
+        shell: powershell
+        run: |
+          & .\dist\CodexBar.Tests.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Core checks failed.' }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: CodexBar-windows
+          path: |
+            dist/CodexBar.exe
+            README.md
+            LICENSE
+          if-no-files-found: error
+          retention-days: 14
